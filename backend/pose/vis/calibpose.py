@@ -3,7 +3,7 @@ import matplotlib.animation as animation
 import mpl_toolkits.mplot3d.art3d as art3d
 import numpy as np
 
-from .bone import H36M_BONE
+from .bone import H36M_BONE, WHOLE_BONE
 
 
 def setLines(X, Y, Z):
@@ -12,6 +12,19 @@ def setLines(X, Y, Z):
     lineZ = []
 
     for bone in H36M_BONE:
+        lineX.append([X[bone[0]], X[bone[1]]])
+        lineY.append([Y[bone[0]], Y[bone[1]]])
+        lineZ.append([Z[bone[0]], Z[bone[1]]])
+
+    return np.array(lineX), np.array(lineY), np.array(lineZ)
+
+
+def setLinesWhole(X, Y, Z):
+    lineX = []
+    lineY = []
+    lineZ = []
+
+    for bone in WHOLE_BONE:
         lineX.append([X[bone[0]], X[bone[1]]])
         lineY.append([Y[bone[0]], Y[bone[1]]])
         lineZ.append([Z[bone[0]], Z[bone[1]]])
@@ -49,7 +62,10 @@ def vis_calib_res(kpts3d_est, kpts3d):
 
         ax.plot(X, Y, Z, "k.")
 
-        X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
+        if "Calibrated" in title:
+            X_bone, Y_bone, Z_bone = setLinesWhole(X, Y, Z)
+        else:
+            X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
         for x, y, z in zip(X_bone, Y_bone, Z_bone):
             line = art3d.Line3D(x, y, z, color="#f94e3e")
             ax.add_line(line)
