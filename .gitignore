@@ -1,1 +1,3 @@
 __pycache__/
+backend/pose/sample_video/
+backend/pose/MotionAGFormer/checkpoint/
