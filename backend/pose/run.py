@@ -6,10 +6,10 @@ from mmdet.apis import init_detector
 from mmpose.apis import init_model
 from mmpose.utils import adapt_mmdet_pipeline
 
-from .calib.calibration import calibrate
-from .inference import inferencer
-from .MotionAGFormer.model import MotionAGFormer
-from .vis.calibpose import vis_calib_res
+from calib.calibration import calibrate
+from inference import inferencer
+from MotionAGFormer.model import MotionAGFormer
+from vis.calibpose import vis_calib_res
 
 
 def load_models(device):

@@ -10,9 +10,9 @@ from mmpose.evaluation.functional import nms
 from mmpose.structures import merge_data_samples, split_instances
 from natsort import natsorted
 
-from .MotionAGFormer.preprocess import h36m_coco_format
-from .MotionAGFormer.preprocess import normalize_screen_coordinates
-from .MotionAGFormer.preprocess import turn_into_clips
+from MotionAGFormer.preprocess import h36m_coco_format
+from MotionAGFormer.preprocess import normalize_screen_coordinates
+from MotionAGFormer.preprocess import turn_into_clips
 
 
 def process_one_image(img, detector, pose_estimator):
@@ -104,7 +104,7 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
         kpt2d, score2d, img_size = estimate2d(input_video, detector, pose_estimator)
 
         # モデルサイズに応じてn_framesを変更
-        kpt3d, score3d = estimate3d(pose_lifter, device, kpts2d, score2d, img_size, n_frames=27)
+        kpt3d, score3d = estimate3d(pose_lifter, device, kpt2d, score2d, img_size, n_frames=27)
 
         kpts2d.append(kpt2d)
         scores2d.append(score2d)
