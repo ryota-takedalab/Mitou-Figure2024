@@ -67,8 +67,8 @@ def main():
                                     K, R_est, t_est, (scores2d_dwp > 0))
 
     ani = vis_calib_res(whole3d, kpts3d)
-    save_path = "./sample_output/result.gif"
-    ani.save(save_path, writer="pillow")
+    save_path = "./sample_output/result.mp4"
+    ani.save(save_path, writer="ffmpeg")
 
 
 if __name__ == "__main__":
