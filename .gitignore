@@ -1,2 +1,3 @@
 __pycache__/
 backend/pose/MotionAGFormer/checkpoint/
+backend/pose/mmpose/mmpose_cfg/checkpoint/

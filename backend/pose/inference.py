@@ -33,7 +33,7 @@ def process_one_image(img, detector, pose_estimator):
     return data_samples.get('pred_instances', None)
 
 
-def estimate2d(input_video, detector, pose_estimator):
+def estimate2d(input_video, detector, pose_estimator, wholebody=False):
     kpts2d = []
     score2d = []
     pred_instances_list = []
@@ -59,7 +59,9 @@ def estimate2d(input_video, detector, pose_estimator):
 
     kpts2d = np.array(kpts2d)
     score2d = np.array(score2d)
-    kpts2d, score2d, _ = h36m_coco_format(kpts2d, score2d)
+    if not wholebody:
+        kpts2d, score2d, _ = h36m_coco_format(kpts2d, score2d)
+
     return kpts2d, score2d, img_size
 
 
@@ -117,3 +119,19 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
     scores3d = np.array(scores3d)
 
     return kpts2d, scores2d, kpts3d, scores3d
+
+
+def inferencer_dwp(video_folder, detector, pose_estimator):
+    video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
+
+    kpts2d, scores2d = [], []
+    for input_video in video_files:
+        kpt2d, score2d, img_size = estimate2d(input_video, detector,
+                                              pose_estimator, wholebody=True)
+        kpts2d.append(kpt2d)
+        scores2d.append(score2d)
+
+    kpts2d = np.array(kpts2d)
+    scores2d = np.array(scores2d)
+
+    return kpts2d, scores2d
