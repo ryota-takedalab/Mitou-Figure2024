@@ -127,7 +127,8 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
 
 
 def inferencer_dwp(video_folder, detector, pose_estimator):
-    video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
+    # video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
+    video_files = natsorted(glob.glob(video_folder + '/*.mov'))
 
     kpts2d, scores2d = [], []
     for input_video in video_files:

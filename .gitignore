@@ -3,3 +3,9 @@ mitou/backend/pose/MotionAGFormer/checkpoint/
 mitou/backend/pose/mmpose/mmpose_cfg/checkpoint/
 mitou/backend/pose/uploads
 mitou/fastapi-env
+
+backend/pose/MotionAGFormer/checkpoint/
+backend/pose/mmpose/mmpose_cfg/checkpoint/
+
+.DS_Store
+@eaDir/
