@@ -4,6 +4,7 @@ import Head from 'next/head';
 
 const IndexPage = () => {
   const [videoSrc, setVideoSrc] = useState('');
+  const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -56,31 +57,34 @@ const IndexPage = () => {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
         const formData = new FormData();
-        Array.from(event.target.files).forEach(file => {
+        const uploadedUrls = Array.from(event.target.files).map(file => {
             formData.append('files', file);
+            return URL.createObjectURL(file); // アップロードされたファイルからURLを生成
         });
 
         setUploading(true);
         setProgress(0); // アップロード開始時に進捗をリセット
+        setUploadedVideos(uploadedUrls); // アップロードされた動画のURLを状態に保存
 
         try {
           const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL || 'http://localhost:8000/upload/'}${client_id}`, {
             method: 'POST',
             body: formData,
           });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const blob = await response.blob();
-            const videoUrl = URL.createObjectURL(blob);
-            setVideoSrc(videoUrl);
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          const blob = await response.blob();
+          const videoUrl = URL.createObjectURL(blob);
+          setVideoSrc(videoUrl); // 処理後の動画URLをセット
         } catch (error) {
-            console.error('Error uploading the files:', error);
+          console.error('Error uploading the files:', error);
         } finally {
-            setUploading(false);
+          setUploading(false);
         }
     }
 };
+
 
 return (
   <div>
@@ -105,10 +109,21 @@ return (
       </div>
     )}
     {videoSrc && (
-      <video controls src={videoSrc} width="720" autoPlay loop>
-        Your browser does not support the video tag.
-      </video>
+      <div style={{ textAlign: 'center'}}>
+        <p style={{ fontSize: '50px' }}>Result Video</p>
+        <video controls src={videoSrc} style={{width:"720px", margin: "0 auto 80px", display: 'block'}} autoPlay loop>
+          Your browser does not support the video tag.
+        </video>
+      </div>
     )}
+    <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+      {uploadedVideos.map((videoSrc, index) => (
+        <div key={index} style={{ margin: '10px', textAlign: 'center'}}> {/* 動画の間隔を設定 */}
+          <p style={{ margin: "0 auto", fontSize: "30px"}}>{`Uploaded Video ${index + 1}`}</p> {/* 動画の番号を表示 */}
+          <video controls src={videoSrc} style={{ width: "500px", display: 'block' }}></video>
+        </div>
+      ))}
+    </div>
   </div>
  );
 };
