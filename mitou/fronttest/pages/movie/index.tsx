@@ -99,10 +99,7 @@ return (
       margin: "0",
       padding: "0",
       minHeight: "100vh",
-      backgroundImage: "url('/white_00096.jpg')",
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center center',
-      backgroundSize: 'cover', 
+      backgroundColor: '#1C1C1C', 
     }}>
     <Head>
       <title>Mitou 2024 Demo</title>
@@ -111,9 +108,8 @@ return (
       fontFamily: "'Passion One', cursive",
       fontSize: "60px",
       textAlign: "center",
-      backgroundImage: "url('/cool-background.png')",
-      backgroundRepeat: 'no-repeat',
-      backgroundSize: 'cover',
+      color: 'white',
+      backgroundColor: 'black',
       padding: "40px 0"
     }}>
       Upload Videos for Pose Estimation
@@ -183,7 +179,7 @@ return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '20px', maxWidth: '1200px', width: '100%' }}> {/* コンテナの最大幅を制限 */}
           {/* 動画コンテナ */}
             <div style={{ textAlign: 'center', flex: 2 }}> {/* 動画コンテナにより多くのスペースを割り当て */}
-              <p style={{ fontSize: '50px' }}>Result Video</p>
+              <p style={{ fontSize: '50px',color: 'white'}}>Result Video</p>
               <video controls src={videoSrc} style={{ maxWidth: "720px", width: '100%', height: "auto" }} autoPlay loop>
                 Your browser does not support the video tag.
               </video>
@@ -191,7 +187,7 @@ return (
 
           {/* Details見出しをコンテナの外に配置 */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '50px', textAlign: 'center', marginBottom: '20px' }}>Details</h2>
+            <h2 style={{ fontSize: '50px', textAlign: 'center', marginBottom: '20px',color: 'white'}}>Details</h2>
 
             {/* Detailsコンテナ */}
             <div style={{ 
@@ -199,26 +195,24 @@ return (
               padding: '20px', 
               border: '5px solid grey', 
               borderRadius: '10px', 
-              backgroundImage: "url('/cool-background3.png')", 
-              backgroundSize: 'cover', 
-              backgroundPosition: 'center center',
+              backgroundColor: 'black',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
             }}>
               <div style={{ width: '100%', marginBottom: '20px', borderBottom: '2px solid #ccc'}}>
-                <h3 style={{ textAlign: 'center', fontSize: '40px' }}>&lt;Jump&gt;</h3>
-                <p style={{ textAlign: 'center', fontSize: '40px' }}>{'1 Lutz' || '-'}</p>
+                <h3 style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>&lt;Jump&gt;</h3>
+                <p style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>{'1 Lutz' || '-'}</p>
               </div>
               <div style={{ width: '100%', marginBottom: '20px', borderBottom: '2px solid #ccc'}}>
-                <h3 style={{ textAlign: 'center', fontSize: '40px' }}>&lt;Rotations&gt;</h3>
-                <p style={{ textAlign: 'center', fontSize: '40px' }}>
+                <h3 style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>&lt;Rotations&gt;</h3>
+                <p style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>
                 {'-31.7° ('} <span style={{ color: '#b71c1c' }}>q</span> {')' || '-'}
                 </p>
               </div>
               <div style={{ width: '100%', marginBottom: '20px' }}>
-                <h3 style={{ textAlign: 'center', fontSize: '40px' }}>&lt;Edge Angle&gt;</h3>
-                <p style={{ textAlign: 'center', fontSize: '40px' }}>
+                <h3 style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>&lt;Edge Angle&gt;</h3>
+                <p style={{ textAlign: 'center', fontSize: '40px', color: 'white'}}>
                 {'91.2° ('} <span style={{ color: '#b71c1c' }}>!</span> {')' || '-'}
                 </p>
               </div>
@@ -234,7 +228,7 @@ return (
     <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
       {uploadedVideos.map((videoSrc, index) => (
         <div key={index} style={{ margin: '10px', textAlign: 'center'}}> {/* 動画の間隔を設定 */}
-          <p style={{ margin: "0 auto", fontSize: "30px"}}>{`Uploaded Video ${index + 1}`}</p> {/* 動画の番号を表示 */}
+          <p style={{ margin: "0 auto", fontSize: "30px",color: 'white'}}>{`Uploaded Video ${index + 1}`}</p> {/* 動画の番号を表示 */}
           <video controls src={videoSrc} style={{ width: "500px", display: 'block' }}></video>
         </div>
       ))}
