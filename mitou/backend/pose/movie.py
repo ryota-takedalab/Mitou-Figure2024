@@ -29,6 +29,8 @@ app.add_middleware(
 # WebSocket接続を管理する辞書
 active_connections = {}
 
+
+
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()

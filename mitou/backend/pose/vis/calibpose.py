@@ -63,7 +63,7 @@ def vis_calib_res(kpts3d_est, kpts3d):
         ax.plot(X, Y, Z, "k.")
 
         if "Calibrated" in title:
-            X_bone, Y_bone, Z_bone = setLinesWhole(X, Y, Z)
+            X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
         else:
             X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
         for x, y, z in zip(X_bone, Y_bone, Z_bone):

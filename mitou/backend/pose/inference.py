@@ -107,6 +107,7 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
     for input_video in video_files:
         kpt2d, score2d, img_size = estimate2d(input_video, detector, pose_estimator)
+        print(kpt2d.shape)
         print("estimated2d finished")
 
         # モデルサイズに応じてn_framesを変更
