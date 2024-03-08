@@ -1,6 +1,7 @@
 import glob
 
 import cv2
+import copy
 import numpy as np
 import torch
 
@@ -15,28 +16,53 @@ from MotionAGFormer.preprocess import normalize_screen_coordinates
 from MotionAGFormer.preprocess import turn_into_clips
 
 
-def process_one_image(img, detector, pose_estimator):
-    det_result = inference_detector(detector, img)
-    pred_instance = det_result.pred_instances.cpu().numpy()
-    bboxes = np.concatenate(
-        (pred_instance.bboxes, pred_instance.scores[:, None]), axis=1)
-    bboxes = bboxes[np.logical_and(pred_instance.labels == 0,
-                                   pred_instance.scores > 0.1)]
+def process_one_image(img, detector, pose_estimator, bboxs_pre, ids_pre, id=0):
+    # det_result = inference_detector(detector, img)
+    # pred_instance = det_result.pred_instances.cpu().numpy()
+    # bboxes = np.concatenate(
+    #     (pred_instance.bboxes, pred_instance.scores[:, None]), axis=1)
+    # bboxes = bboxes[np.logical_and(pred_instance.labels == 0,
+    #                                pred_instance.scores > 0.1)]
+    # area = (bboxes[:, 2] - bboxes[:, 0]) * (bboxes[:, 3] - bboxes[:, 1])
+    # bboxes = np.array([bboxes[np.argmax(area)]])
+    # bboxes = bboxes[nms(bboxes, 0.5), :4]
 
-    area = (bboxes[:, 2] - bboxes[:, 0]) * (bboxes[:, 3] - bboxes[:, 1])
-    bboxes = np.array([bboxes[np.argmax(area)]])
+    # detector: YOLOv8x
+    det_result = detector.track(img, persist=True, classes=[0], conf=0.3, verbose=False, fraction=1.0)
+    bboxs = det_result[0].boxes.xyxy.cpu().numpy()
+    ids = det_result[0].boxes.id.cpu().numpy()
 
-    bboxes = bboxes[nms(bboxes, 0.5), :4]
-    pose_results = inference_topdown(pose_estimator, img, bboxes)
+    if bboxs is None:
+        print('No person detected!')
+        bboxs = bboxs_pre
+        ids = ids_pre
+    if id == 0:
+        bbox_h = (bboxs[:, 2] - bboxs[:, 0]) * (bboxs[:, 3] - bboxs[:, 1])
+        idx = np.argmax(bbox_h)
+        id = ids[idx]
+
+    if id not in ids:
+        print('tracking person lost!')
+        bboxs = bboxs_pre
+        ids = ids_pre
+    else:
+        bboxs_pre = copy.deepcopy(bboxs)
+        ids_pre = copy.deepcopy(ids)
+
+    bboxs = np.array(bboxs[ids == id])
+    pose_results = inference_topdown(pose_estimator, img, bboxs)
     data_samples = merge_data_samples(pose_results)
 
-    return data_samples.get('pred_instances', None)
+    return data_samples.get('pred_instances', None), bboxs, bboxs_pre, ids_pre, id
 
 
 def estimate2d(input_video, detector, pose_estimator, wholebody=False):
     kpts2d = []
     score2d = []
+    bboxs_list = []
     pred_instances_list = []
+    bboxs_pre, ids_pre, id = None, None, 0
+
     cap = cv2.VideoCapture(input_video)
     frame_idx = 0
 
@@ -49,20 +75,25 @@ def estimate2d(input_video, detector, pose_estimator, wholebody=False):
         if not success:
             break
 
-        pred_instances = process_one_image(frame, detector, pose_estimator)
+        pred_instances, bboxs, bboxs_pre, ids_pre, id = process_one_image(frame,
+                                                                          detector,
+                                                                          pose_estimator,
+                                                                          bboxs_pre, ids_pre, id)
         pred_instances_list = split_instances(pred_instances)
 
         kpt = np.array(pred_instances_list[0]['keypoints'])
         score = np.array(pred_instances_list[0]['keypoint_scores'])
         kpts2d.append(kpt)
         score2d.append(score)
+        bboxs_list.append(bboxs)
 
     kpts2d = np.array(kpts2d)
     score2d = np.array(score2d)
+
     if not wholebody:
         kpts2d, score2d, _ = h36m_coco_format(kpts2d, score2d)
 
-    return kpts2d, score2d, img_size
+    return kpts2d, score2d, img_size, bboxs_list
 
 
 def estimate3d(pose_lifter, device, kpts2d, score2d, img_size, n_frames=27):
@@ -106,7 +137,7 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
 
     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
     for input_video in video_files:
-        kpt2d, score2d, img_size = estimate2d(input_video, detector, pose_estimator)
+        kpt2d, score2d, img_size, bboxs_list = estimate2d(input_video, detector, pose_estimator)
         print(kpt2d.shape)
         print("estimated2d finished")
 
@@ -133,7 +164,7 @@ def inferencer_dwp(video_folder, detector, pose_estimator):
 
     kpts2d, scores2d = [], []
     for input_video in video_files:
-        kpt2d, score2d, img_size = estimate2d(input_video, detector,
+        kpt2d, score2d, img_size, _ = estimate2d(input_video, detector,
                                               pose_estimator, wholebody=True)
         kpts2d.append(kpt2d)
         scores2d.append(score2d)

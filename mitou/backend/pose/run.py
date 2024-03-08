@@ -11,6 +11,8 @@ from mmdet.apis import init_detector
 from mmpose.apis import init_model
 from mmpose.utils import adapt_mmdet_pipeline
 
+from ultralytics import YOLO
+
 from calib.calibration import calibrate
 from calib.utils import triangulate_with_conf
 from inference import inferencer, inferencer_dwp
@@ -18,11 +20,6 @@ from MotionAGFormer.model import MotionAGFormer
 from vis.calibpose import vis_calib_res
 
 def load_models(device):
-    det_config = './mmpose/mmdet_cfg/rtmdet_m_640-8xb32_coco-person.py'
-    det_ckpt = 'https://download.openmmlab.com/mmpose/v1/projects/rtmpose/rtmdet_m_8xb32-100e_coco-obj365-person-235e8209.pth'
-    detector = init_detector(det_config, det_ckpt, device=device)
-    detector.cfg = adapt_mmdet_pipeline(detector.cfg)
-
     pose_config = './mmpose/mmpose_cfg/td-hm_ViTPose-huge_8xb64-210e_coco-256x192.py'
     pose_ckpt = 'https://download.openmmlab.com/mmpose/v1/body_2d_keypoint/topdown_heatmap/coco/td-hm_ViTPose-huge_8xb64-210e_coco-256x192-e32adcd4_20230314.pth'
     pose_estimator = init_model(pose_config, pose_ckpt, device=device)
@@ -47,7 +44,7 @@ def load_models(device):
     pose_lifter.eval()
     pose_lifter.to(device)
 
-    return detector, pose_estimator, pose_lifter, dwp_estimator
+    return pose_estimator, pose_lifter, dwp_estimator
 
 
 async def main(video_folder, websocket=None, client_id=None):
@@ -55,7 +52,8 @@ async def main(video_folder, websocket=None, client_id=None):
     # 動画が入ったフォルダを指定してアップロードできるように引数を追加
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    detector, pose_estimator, pose_lifter, dwp_estimator = load_models(device)
+    detector = YOLO('yolov8x.pt')
+    pose_estimator, pose_lifter, dwp_estimator = load_models(device)
     await send_progress("Inferencer", websocket, client_id)
 
 
