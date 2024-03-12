@@ -11,7 +11,6 @@ from mmdet.apis import init_detector
 from mmpose.apis import init_model
 from mmpose.utils import adapt_mmdet_pipeline
 
-from ultralytics import YOLO
 
 from calib.calibration import calibrate
 from calib.utils import triangulate_with_conf
@@ -52,13 +51,13 @@ async def main(video_folder, websocket=None, client_id=None):
     # 動画が入ったフォルダを指定してアップロードできるように引数を追加
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    detector = YOLO('yolov8x.pt')
+    yolo_model = 'yolov8x.pt'
     pose_estimator, pose_lifter, dwp_estimator = load_models(device)
     await send_progress("Inferencer", websocket, client_id)
 
 
     kpts2d, scores2d, kpts3d, scores3d = inferencer(video_folder,
-                                                    detector, pose_estimator, pose_lifter, device)
+                                                    yolo_model, pose_estimator, pose_lifter, device)
 
     await send_progress("Loading camera settings", websocket, client_id)
     # カメラによって異なるので今後変更が必要

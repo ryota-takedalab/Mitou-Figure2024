@@ -15,6 +15,8 @@ from MotionAGFormer.preprocess import h36m_coco_format
 from MotionAGFormer.preprocess import normalize_screen_coordinates
 from MotionAGFormer.preprocess import turn_into_clips
 
+from ultralytics import YOLO
+
 
 def process_one_image(img, detector, pose_estimator, bboxs_pre, ids_pre, id=0):
     # detector: YOLOv8x
@@ -124,7 +126,7 @@ def estimate3d(pose_lifter, device, kpts2d, score2d, img_size, n_frames=27):
     return np.array(kpts3d), np.array(score3d)
 
 
-def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
+def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
     # video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
     video_files = natsorted(glob.glob(video_folder + '/*.mov'))
 
@@ -132,6 +134,7 @@ def inferencer(video_folder, detector, pose_estimator, pose_lifter, device):
 
     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
     for input_video in video_files:
+        detector = YOLO(yolo_model)
         kpt2d, score2d, img_size, bboxs_list = estimate2d(input_video, detector, pose_estimator)
         print(kpt2d.shape)
         print("estimated2d finished")
