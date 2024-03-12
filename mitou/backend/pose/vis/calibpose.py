@@ -34,10 +34,12 @@ def setLinesWhole(X, Y, Z):
 
 def vis_calib_res(kpts3d_est, kpts3d):
     fig = plt.figure()
-    ax0 = fig.add_subplot(232, projection="3d")
-    ax1 = fig.add_subplot(234, projection="3d")
-    ax2 = fig.add_subplot(235, projection="3d")
-    ax3 = fig.add_subplot(236, projection="3d")
+    plt.rcParams["figure.figsize"] = (8, 16)
+    plt.tight_layout()
+    ax0 = fig.add_subplot(121, projection="3d")
+    ax1 = fig.add_subplot(322, projection="3d")
+    ax2 = fig.add_subplot(324, projection="3d")
+    ax3 = fig.add_subplot(326, projection="3d")
     
     z_min = np.nanmin(kpts3d_est[:, :, 2])
     z_max = np.nanmax(kpts3d_est[:, :, 2])
