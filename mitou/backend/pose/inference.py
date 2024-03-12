@@ -29,13 +29,16 @@ def process_one_image(img, detector, pose_estimator, bboxs_pre, ids_pre, id=0):
 
     # detector: YOLOv8x
     det_result = detector.track(img, persist=True, classes=[0], conf=0.3, verbose=False, fraction=1.0)
-    bboxs = det_result[0].boxes.xyxy.cpu().numpy()
-    ids = det_result[0].boxes.id.cpu().numpy()
-
-    if bboxs is None:
+    if det_result[0].boxes is None and bboxs_pre is not None:
         print('No person detected!')
         bboxs = bboxs_pre
         ids = ids_pre
+    if det_result[0].boxes is None and bboxs_pre is None:
+        print('No person detected!')
+        return None, None, bboxs_pre, ids_pre, id
+    bboxs = det_result[0].boxes.xyxy.cpu().numpy()
+    ids = det_result[0].boxes.id.cpu().numpy()
+
     if id == 0:
         bbox_h = (bboxs[:, 2] - bboxs[:, 0]) * (bboxs[:, 3] - bboxs[:, 1])
         idx = np.argmax(bbox_h)
