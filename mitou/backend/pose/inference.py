@@ -17,28 +17,20 @@ from MotionAGFormer.preprocess import turn_into_clips
 
 
 def process_one_image(img, detector, pose_estimator, bboxs_pre, ids_pre, id=0):
-    # det_result = inference_detector(detector, img)
-    # pred_instance = det_result.pred_instances.cpu().numpy()
-    # bboxes = np.concatenate(
-    #     (pred_instance.bboxes, pred_instance.scores[:, None]), axis=1)
-    # bboxes = bboxes[np.logical_and(pred_instance.labels == 0,
-    #                                pred_instance.scores > 0.1)]
-    # area = (bboxes[:, 2] - bboxes[:, 0]) * (bboxes[:, 3] - bboxes[:, 1])
-    # bboxes = np.array([bboxes[np.argmax(area)]])
-    # bboxes = bboxes[nms(bboxes, 0.5), :4]
-
     # detector: YOLOv8x
     det_result = detector.track(img, persist=True, classes=[0], conf=0.3, verbose=False, fraction=1.0)
-    if det_result[0].boxes is None and bboxs_pre is not None:
+    if det_result[0].boxes is None:
         print('No person detected!')
-        bboxs = bboxs_pre
-        ids = ids_pre
-    if det_result[0].boxes is None and bboxs_pre is None:
-        print('No person detected!')
-        return None, None, bboxs_pre, ids_pre, id
-    bboxs = det_result[0].boxes.xyxy.cpu().numpy()
-    ids = det_result[0].boxes.id.cpu().numpy()
+        if bboxs_pre is None:
+            return None, None, bboxs_pre, ids_pre, id
+        if bboxs_pre is not None:
+            bboxs = bboxs_pre
+            ids = ids_pre
+    else:
+        bboxs = det_result[0].boxes.xyxy.cpu().numpy()
+        ids = det_result[0].boxes.id.cpu().numpy()
 
+    # initialize id
     if id == 0:
         bbox_h = (bboxs[:, 2] - bboxs[:, 0]) * (bboxs[:, 3] - bboxs[:, 1])
         idx = np.argmax(bbox_h)
