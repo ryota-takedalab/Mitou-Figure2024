@@ -42,8 +42,6 @@ def vis_calib_res(kpts3d_est, kpts3d):
     z_min = np.nanmin(kpts3d_est[:, :, 2])
     z_max = np.nanmax(kpts3d_est[:, :, 2])
     scale = (z_max - z_min) / 2
-    baffer = scale * 0.2
-    scale += baffer
 
     def draw_skeleton(ax, X, Y, Z, title):
         ax.clear()
@@ -52,7 +50,7 @@ def vis_calib_res(kpts3d_est, kpts3d):
         if "Calibrated" in title:
             ax.set_xlim(np.mean(X) - scale, np.mean(X) + scale)
             ax.set_ylim(np.mean(Y) - scale, np.mean(Y) + scale)
-            ax.set_zlim(z_min - baffer, z_max + baffer)
+            ax.set_zlim(z_min, z_max)
         elif "Cam 1" in title:
             ax.set_xlim(np.nanmin(kpts3d[0, :, :, 0]), np.nanmax(kpts3d[0, :, :, 0]))
             ax.set_ylim(np.nanmin(kpts3d[0, :, :, 1]), np.nanmax(kpts3d[0, :, :, 1]))
@@ -74,6 +72,8 @@ def vis_calib_res(kpts3d_est, kpts3d):
             X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
         for x, y, z in zip(X_bone, Y_bone, Z_bone):
             line = art3d.Line3D(x, y, z, color="#f94e3e")
+            line.set_linewidth(1)
+            line.set_markersize(0.5)
             ax.add_line(line)
 
     def update_frame(fc):
