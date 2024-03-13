@@ -45,7 +45,7 @@ def vis_calib_res(kpts3d_est, kpts3d, whole3d=False):
     y_max = np.nanmax(kpts3d_est[:, :, 1])
     scale = (y_max - y_min) / 2
 
-    def draw_skeleton(ax, X, Y, Z, title, whole3d=False):
+    def draw_skeleton(ax, X, Y, Z, title):
         ax.clear()
         ax.set_title(title)
         ax.view_init(elev=-90, azim=-86)
