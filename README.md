@@ -53,7 +53,7 @@
 - デモ実行の場合は`uvicorn movie:app`
 
 ### STEP3 フロントエンドサーバーの起動
-- `frontend`ディレクトリ直下のターミナルで`npm run dev`を実行 
+- `fronttest`ディレクトリ直下のターミナルで`npm run dev`を実行 
 - デベロッパーツールのコンソール上で`ws://localhost/_next/webpack-hmr' failed: Websocket`のエラーが出たら、`httpd.conf`に以下のコードを追記
 ```zsh
 <Location /_next/webpack-hmr>
