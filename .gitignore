@@ -4,7 +4,7 @@ mitou/backend/pose/mmpose/mmpose_cfg/checkpoint/
 mitou/backend/pose/uploads
 mitou/fastapi-env
 mitou/backend/pose/*.pt
-mitou/backend/pose/sample_output
+mitou/backend/pose/sample_output/
 
 backend/pose/MotionAGFormer/checkpoint/
 backend/pose/mmpose/mmpose_cfg/checkpoint/
