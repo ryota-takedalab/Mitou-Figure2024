@@ -173,8 +173,8 @@ def inferencer_dwp(video_folder, yolo_model, pose_estimator):
         kpt2d, score2d, img_size, _ = estimate2d(input_video, detector,
                                               pose_estimator, wholebody=True)
         # only add 23 keypoints (17 keypoints + 6 foot keypoints)
-        kpts2d.append(kpt2d[:23])
-        scores2d.append(score2d[:23])
+        kpts2d.append(kpt2d[:, :23, :])
+        scores2d.append(score2d[:, :23, :])
 
     kpts2d = np.array(kpts2d)
     scores2d = np.array(scores2d)
