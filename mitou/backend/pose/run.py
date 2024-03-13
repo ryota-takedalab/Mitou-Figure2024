@@ -74,7 +74,7 @@ async def main(video_folder, websocket=None, client_id=None):
 
     await send_progress("Generating result video", websocket, client_id)
     save_path = "./sample_output/demodemo.mp4"
-    ani = vis_calib_res(kpts3d_tri, kpts3d, whole3d=True)
+    ani = vis_calib_res(kpts3d_tri, kpts3d, whole3d)
     ani.save(save_path, writer="ffmpeg")
     print("save mp4 finished")
 
