@@ -1,9 +1,7 @@
 # Mitou-Figure2024
 未踏の提案システムを構築するためのリポジトリです
 
-![未踏フィギュア_UIイメージ](https://github.com/ryota-takedalab/Mitou-Figure2024/assets/102862947/1cdd2e81-bde6-4534-8542-2c18b22d4b27)
-
-
+![未踏フィギュア UIイメージ](https://github.com/ryota-takedalab/Mitou-Figure2024/assets/158696673/06b04400-2f9c-4919-955d-c307af9431f3)
 
 ## ローカルのテスト環境
 - Webサーバー：Apache2
@@ -71,3 +69,6 @@
 - ブラウザ上で、`localhost:3000/movie`にアクセス
 - コンソール上にエラーが出ている場合はリロード推奨
 - `Select Videos`ボタンを押して動画を3つ入力し、処理の終了を待つ(数分かかる)
+
+![demo_movie3](https://github.com/ryota-takedalab/Mitou-Figure2024/assets/158696673/d37d5ff7-b49c-4b03-b04b-2c1f5334c38c)
+
