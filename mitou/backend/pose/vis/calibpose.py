@@ -32,7 +32,7 @@ def setLinesWhole(X, Y, Z):
     return np.array(lineX), np.array(lineY), np.array(lineZ)
 
 
-def vis_calib_res(kpts3d_est, kpts3d):
+def vis_calib_res(kpts3d_est, kpts3d, whole3d=False):
     fig = plt.figure()
     plt.rcParams["figure.figsize"] = (8, 16)
     plt.tight_layout()
@@ -45,7 +45,7 @@ def vis_calib_res(kpts3d_est, kpts3d):
     y_max = np.nanmax(kpts3d_est[:, :, 1])
     scale = (y_max - y_min) / 2
 
-    def draw_skeleton(ax, X, Y, Z, title):
+    def draw_skeleton(ax, X, Y, Z, title, whole3d=False):
         ax.clear()
         ax.set_title(title)
         ax.view_init(elev=-90, azim=-86)
@@ -68,14 +68,14 @@ def vis_calib_res(kpts3d_est, kpts3d):
 
         ax.plot(X, Y, Z, "k.")
 
-        if "Calibrated" in title:
-            X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
+        if whole3d and "Calibrated" in title:
+            X_bone, Y_bone, Z_bone = setLinesWhole(X, Y, Z)
         else:
             X_bone, Y_bone, Z_bone = setLines(X, Y, Z)
         for x, y, z in zip(X_bone, Y_bone, Z_bone):
             line = art3d.Line3D(x, y, z, color="#f94e3e")
-            line.set_linewidth(1)
-            line.set_markersize(0.5)
+            line.set_linewidth(1.2)
+            line.set_markersize(0.2)
             ax.add_line(line)
 
     def update_frame(fc):

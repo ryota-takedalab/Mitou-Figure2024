@@ -127,8 +127,12 @@ def estimate3d(pose_lifter, device, kpts2d, score2d, img_size, n_frames=27):
 
 
 def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
-    # video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
-    video_files = natsorted(glob.glob(video_folder + '/*.mov'))
+
+    types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
+    video_files = []
+    for t in types:
+        video_files += glob.glob(video_folder + '/' + t)
+    video_files = natsorted(video_files)
 
     print(video_files)
 
@@ -156,16 +160,21 @@ def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
     return kpts2d, scores2d, kpts3d, scores3d
 
 
-def inferencer_dwp(video_folder, detector, pose_estimator):
-    # video_files = natsorted(glob.glob(video_folder + '/*.mp4'))
-    video_files = natsorted(glob.glob(video_folder + '/*.mov'))
+def inferencer_dwp(video_folder, yolo_model, pose_estimator):
+    types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
+    video_files = []
+    for t in types:
+        video_files += glob.glob(video_folder + '/' + t)
+    video_files = natsorted(video_files)
 
     kpts2d, scores2d = [], []
     for input_video in video_files:
+        detector = YOLO(yolo_model)
         kpt2d, score2d, img_size, _ = estimate2d(input_video, detector,
                                               pose_estimator, wholebody=True)
-        kpts2d.append(kpt2d)
-        scores2d.append(score2d)
+        # only add 23 keypoints (17 keypoints + 6 foot keypoints)
+        kpts2d.append(kpt2d[:23])
+        scores2d.append(score2d[:23])
 
     kpts2d = np.array(kpts2d)
     scores2d = np.array(scores2d)

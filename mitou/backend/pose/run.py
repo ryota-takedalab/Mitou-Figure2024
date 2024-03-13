@@ -47,40 +47,34 @@ def load_models(device):
 
 
 async def main(video_folder, websocket=None, client_id=None):
-    await send_progress("Loading model", websocket, client_id)
-    # 動画が入ったフォルダを指定してアップロードできるように引数を追加
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"    
 
+    await send_progress("Loading model", websocket, client_id)
     yolo_model = 'yolov8x.pt'
     pose_estimator, pose_lifter, dwp_estimator = load_models(device)
-    await send_progress("Inferencer", websocket, client_id)
 
-
-    kpts2d, scores2d, kpts3d, scores3d = inferencer(video_folder,
-                                                    yolo_model, pose_estimator, pose_lifter, device)
+    await send_progress("Estimating 2D & 3D pose", websocket, client_id)
+    kpts2d, scores2d, kpts3d, scores3d = inferencer(video_folder, yolo_model, pose_estimator,
+                                                    pose_lifter, device)
 
     await send_progress("Loading camera settings", websocket, client_id)
-    # カメラによって異なるので今後変更が必要
-
+    # TODO: カメラデバイスに応じたパラメータ変更を可能にする
     param_iphone11 = np.load("./intrinsic/iphone11_4K.npz")
     param_iphone13 = np.load("./intrinsic/iphone13_4K.npz")
-    # K = np.array([param_c13["mtx"], param_c2["mtx"], param_c13["mtx"]])
     K = np.array([param_iphone11["mtx"], param_iphone13["mtx"], param_iphone13["mtx"]])
 
     await send_progress("Processing calibration", websocket, client_id)
-
     R_est, t_est, kpts3d_est, kpts3d_tri = calibrate(kpts2d, scores2d, kpts3d, scores3d, K)
+    # Set whole3d to True if you want to visualize the whole body
+    whole3d = True
+    if whole3d:
+        kpts2d_dwp, scores2d_dwp = inferencer_dwp(video_folder, yolo_model, dwp_estimator)
+        kpts3d_tri = triangulate_with_conf(kpts2d_dwp, scores2d_dwp, 
+                                           K, R_est, t_est, (scores2d_dwp > 0))
 
     await send_progress("Generating result video", websocket, client_id)
-
-    #kpts2d_dwp, scores2d_dwp = inferencer_dwp(video_folder, detector, dwp_estimator)
-
-    #whole3d = triangulate_with_conf(kpts2d_dwp, scores2d_dwp,
-                                    #K, R_est, t_est, (scores2d_dwp > 0))
-
-    #await send_progress("Generating result video", websocket, client_id)
-    ani = vis_calib_res(kpts3d_tri, kpts3d)
     save_path = "./sample_output/demodemo.mp4"
+    ani = vis_calib_res(kpts3d_tri, kpts3d, whole3d=True)
     ani.save(save_path, writer="ffmpeg")
     print("save mp4 finished")
 
