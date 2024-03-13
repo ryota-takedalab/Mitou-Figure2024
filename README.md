@@ -1,7 +1,8 @@
 # Mitou-Figure2024
 未踏の提案システムを構築するためのリポジトリです
 
-![未踏フィギュア UIイメージ](https://github.com/ryota-takedalab/Mitou-Figure2024/assets/158696673/06b04400-2f9c-4919-955d-c307af9431f3)
+![未踏フィギュア UIイメージ](https://github.com/ryota-takedalab/Mitou-Figure2024/assets/158696673/254c326d-b7a6-4d17-bc7e-d5b6c27007b7)
+
 
 ## ローカルのテスト環境
 - Webサーバー：Apache2
