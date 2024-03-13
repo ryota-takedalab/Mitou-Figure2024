@@ -40,10 +40,10 @@ def vis_calib_res(kpts3d_est, kpts3d):
     ax1 = fig.add_subplot(322, projection="3d")
     ax2 = fig.add_subplot(324, projection="3d")
     ax3 = fig.add_subplot(326, projection="3d")
-    
-    z_min = np.nanmin(kpts3d_est[:, :, 2])
-    z_max = np.nanmax(kpts3d_est[:, :, 2])
-    scale = (z_max - z_min) / 2
+
+    y_min = np.nanmin(kpts3d_est[:, :, 1])
+    y_max = np.nanmax(kpts3d_est[:, :, 1])
+    scale = (y_max - y_min) / 2
 
     def draw_skeleton(ax, X, Y, Z, title):
         ax.clear()
@@ -51,8 +51,8 @@ def vis_calib_res(kpts3d_est, kpts3d):
         ax.view_init(elev=-90, azim=-86)
         if "Calibrated" in title:
             ax.set_xlim(np.mean(X) - scale, np.mean(X) + scale)
-            ax.set_ylim(np.mean(Y) - scale, np.mean(Y) + scale)
-            ax.set_zlim(z_min, z_max)
+            ax.set_ylim(y_min, y_max)
+            ax.set_zlim(np.mean(Z) - scale, np.mean(Z) + scale)
         elif "Cam 1" in title:
             ax.set_xlim(np.nanmin(kpts3d[0, :, :, 0]), np.nanmax(kpts3d[0, :, :, 0]))
             ax.set_ylim(np.nanmin(kpts3d[0, :, :, 1]), np.nanmax(kpts3d[0, :, :, 1]))
