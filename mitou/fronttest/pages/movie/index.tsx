@@ -22,47 +22,57 @@ const IndexPage = () => {
   };
   
   useEffect(() => {
-    // クライアントIDを生成して即座にWebSocket接続を開始する
     const newClientId = uuidv4();
     setClientId(newClientId);
   
-    // client_id の状態更新を待つために、WebSocket接続の処理を Promise または useEffect の内部関数で実行する
-    const setupWebSocket = (clientId: string) => {
-      const websocket = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL || 'ws://localhost:8000/ws'}/${clientId}`);
-      setWs(websocket);
-    
-      websocket.onopen = () => console.log('WebSocket Connection opened');
-      websocket.onmessage = (event) => {
+    const websocket = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL || 'ws://localhost:8000/ws'}/${newClientId}`);
+    console.log('WebSocket Connection attempt');
+  
+    websocket.onopen = () => {
+      console.log('WebSocket Connection opened');
+      // ハートビートとして定期的にpingを送信
+      const heartbeatInterval = setInterval(() => {
+        console.log('Sending heartbeat ping');
+        websocket.send('ping');
+      }, 15000); // 15秒ごと
+  
+      // Cleanup function for the heartbeat interval
+      return () => clearInterval(heartbeatInterval);
+    };
+  
+    websocket.onmessage = (event) => {
+      try {
         const data = JSON.parse(event.data);
         console.log('Received WebSocket message:', data);
         if (data.status !== undefined) {
           setProgressMessage(data.status);
-          console.log(data.status); 
+          console.log(data.status);
         }
-      };
-      websocket.onerror = (error) => console.error('WebSocket Error:', error);
-      websocket.onclose = () => {
-        console.log('WebSocket Connection closed');
-        setWs(null); // WebSocketの状態を更新
-      };
-    };    
+      } catch (e) {
+        // JSON解析に失敗した場合、テキストメッセージとして処理
+        if (event.data === 'pong') {
+          console.log('Pong received');
+        }
+      }
+    };
   
-    // clientIdを引数としてsetupWebSocketを呼び出し
-    setupWebSocket(newClientId);
-
+    websocket.onerror = (error) => console.error('WebSocket Error:', error);
+    websocket.onclose = () => console.log('WebSocket Connection closed');
+    setWs(websocket);
+  
     const dotsInterval = setInterval(() => {
       setDots(prevDots => (prevDots.length < 3 ? prevDots + '.' : ''));
     }, 500); // 500ミリ秒ごとに更新
   
-    // useEffectのクリーンアップ関数でWebSocketを閉じる
+    // Cleanup function for the WebSocket connection and the dots interval
     return () => {
-      if (ws) {
-        ws.close();
+      if (websocket) {
+        websocket.close();
       }
       clearInterval(dotsInterval);
     };
   }, []);
-
+  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
         const formData = new FormData();

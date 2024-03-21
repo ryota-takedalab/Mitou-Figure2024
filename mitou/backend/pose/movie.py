@@ -14,6 +14,7 @@ import asyncio
 import run
 import sys
 import json
+import shutil
 
 
 app = FastAPI()
@@ -29,29 +30,44 @@ app.add_middleware(
 # WebSocket接続を管理する辞書
 active_connections = {}
 
-
+def delete_directory(dir_path: str):
+    try:
+        shutil.rmtree(dir_path)
+        print(f"Deleted directory: {dir_path}")
+    except Exception as e:
+        print(f"Error deleting directory {dir_path}: {e}")
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()
-    active_connections[client_id] = websocket
+    if client_id not in active_connections:
+        active_connections[client_id] = {}
+    active_connections[client_id]['websocket'] = websocket
+
+
     try:
         while True:
             data = await websocket.receive_text()
-            # ここでクライアントからのメッセージに応じた処理を行う
+            if data == 'ping':
+                await websocket.send_text('pong')
     except Exception as e:
-        del active_connections[client_id]
-        await websocket.close()
         print(f"WebSocket connection closed: {e}")
-
+    finally:
+        if client_id in active_connections:
+            if 'temp_folder_path' in active_connections[client_id]:
+                delete_directory(active_connections[client_id]['temp_folder_path'])
+            del active_connections[client_id]
+        await websocket.close()
 
 @app.post("/upload/{client_id}")
 async def handle_upload(client_id: str, files: List[UploadFile] = File(...)):
     upload_folder = "uploads"
-    temp_folder_id = uuid4()
-    temp_folder_path = os.path.join(upload_folder, str(temp_folder_id))
+    temp_folder_path = os.path.join(upload_folder, client_id)
     os.makedirs(temp_folder_path, exist_ok=True)
 
+    if client_id not in active_connections:
+        active_connections[client_id] = {}
+    active_connections[client_id]['temp_folder_path'] = temp_folder_path
     file_locations = []
 
     try:
@@ -65,9 +81,13 @@ async def handle_upload(client_id: str, files: List[UploadFile] = File(...)):
         raise HTTPException(status_code=500, detail=f"File upload failed: {e}")
 
     # WebSocket経由でプログレス更新を送信するためにclient_idを使用
-    websocket = active_connections.get(client_id)
-    if not websocket:
+    connection_info = active_connections.get(client_id)
+    if not connection_info:
         raise HTTPException(status_code=404, detail="WebSocket connection not found")
+
+    websocket = connection_info.get('websocket')
+    if not websocket:
+        raise HTTPException(status_code=404, detail="WebSocket object not found in connection info")
 
     # 非同期にrun.mainを呼び出し、WebSocketとclient_idを渡す
     save_path = await run.main(temp_folder_path, websocket, client_id)
