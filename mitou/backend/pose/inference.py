@@ -1,5 +1,5 @@
 import glob
-
+import asyncio
 import cv2
 import copy
 import numpy as np
@@ -16,6 +16,7 @@ from MotionAGFormer.preprocess import normalize_screen_coordinates
 from MotionAGFormer.preprocess import turn_into_clips
 
 from ultralytics import YOLO
+from concurrent.futures import ThreadPoolExecutor
 
 
 def process_one_image(img, detector, pose_estimator, bboxs_pre, ids_pre, id=0):
@@ -125,28 +126,39 @@ def estimate3d(pose_lifter, device, kpts2d, score2d, img_size, n_frames=27):
 
     return np.array(kpts3d), np.array(score3d)
 
+# 非同期実行用のラッパー関数
+async def async_estimate2d(executor, input_video, detector, pose_estimator, wholebody=False):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        executor, estimate2d, input_video, detector, pose_estimator, wholebody
+    )
 
-def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
-
+async def async_estimate3d(executor, pose_lifter, device, kpts2d, score2d, img_size, n_frames=27):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        executor, estimate3d, pose_lifter, device, kpts2d, score2d, img_size, n_frames
+    )
+# 非同期のinferencer関数
+# CPUの並列化で非同期化、estimated2D,3D自体はGPU処理
+# 非同期化する前からestimated2D,3DはGPU処理だったため、あまり計算時間の恩恵は感じられないかも(GPUの性能依存)
+async def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
+    executor = ThreadPoolExecutor(max_workers=4)
     types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
     video_files = []
     for t in types:
         video_files += glob.glob(video_folder + '/' + t)
     video_files = natsorted(video_files)
-
     print(video_files)
 
     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
-    for input_video in video_files:
+    async def process_video(video):
         detector = YOLO(yolo_model)
-        kpt2d, score2d, img_size, bboxs_list = estimate2d(input_video, detector, pose_estimator)
-        print(kpt2d.shape)
-        print("estimated2d finished")
+        kpts2d, score2d, img_size, bboxs_list = await async_estimate2d(executor, video, detector, pose_estimator)
+        kpts3d, score3d = await async_estimate3d(executor, pose_lifter, device, kpts2d, score2d, img_size)
+        return kpts2d, score2d, kpts3d, score3d
 
-        # モデルサイズに応じてn_framesを変更
-        kpt3d, score3d = estimate3d(pose_lifter, device, kpt2d, score2d, img_size, n_frames=27)
-        print("estimated3d finished")
-
+    for video in video_files:
+        kpt2d, score2d, kpt3d, score3d = await process_video(video)  # 各ビデオを順番に処理
         kpts2d.append(kpt2d)
         scores2d.append(score2d)
         kpts3d.append(kpt3d)
@@ -156,8 +168,42 @@ def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
     scores2d = np.array(scores2d)
     kpts3d = np.array(kpts3d)
     scores3d = np.array(scores3d)
+    print("finished 2D&3D")
 
     return kpts2d, scores2d, kpts3d, scores3d
+
+# def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
+
+#     types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
+#     video_files = []
+#     for t in types:
+#         video_files += glob.glob(video_folder + '/' + t)
+#     video_files = natsorted(video_files)
+
+#     print(video_files)
+
+#     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
+#     for input_video in video_files:
+#         detector = YOLO(yolo_model)
+#         kpt2d, score2d, img_size, bboxs_list = estimate2d(input_video, detector, pose_estimator)
+#         print(kpt2d.shape)
+#         print("estimated2d finished")
+
+#         # モデルサイズに応じてn_framesを変更
+#         kpt3d, score3d = estimate3d(pose_lifter, device, kpt2d, score2d, img_size, n_frames=27)
+#         print("estimated3d finished")
+
+#         kpts2d.append(kpt2d)
+#         scores2d.append(score2d)
+#         kpts3d.append(kpt3d)
+#         scores3d.append(score3d)
+
+#     kpts2d = np.array(kpts2d)
+#     scores2d = np.array(scores2d)
+#     kpts3d = np.array(kpts3d)
+#     scores3d = np.array(scores3d)
+
+#     return kpts2d, scores2d, kpts3d, scores3d
 
 
 def inferencer_dwp(video_folder, yolo_model, pose_estimator):

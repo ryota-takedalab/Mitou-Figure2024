@@ -54,7 +54,7 @@ async def main(video_folder, websocket=None, client_id=None):
     pose_estimator, pose_lifter, dwp_estimator = load_models(device)
 
     await send_progress("Estimating 2D & 3D pose", websocket, client_id)
-    kpts2d, scores2d, kpts3d, scores3d = inferencer(video_folder, yolo_model, pose_estimator,
+    kpts2d, scores2d, kpts3d, scores3d = await inferencer(video_folder, yolo_model, pose_estimator,
                                                     pose_lifter, device)
 
     await send_progress("Loading camera settings", websocket, client_id)
