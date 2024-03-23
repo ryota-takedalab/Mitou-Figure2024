@@ -2,6 +2,7 @@ import itertools
 import cv2
 import numpy as np
 import scipy
+import asyncio
 
 from pycalib.calib import triangulate
 
@@ -33,6 +34,18 @@ def joints2projections(p2d_CxNxJx2, mask_vis_NxJ):
     idx = np.isnan(p2d).any(axis=(0, 2))
     p2d = p2d[:, ~idx, :]
     return p2d
+
+# 非同期実行のためのラッパー関数
+# calibrate関数を非同期化するために、試しに以下の二つの関数を並列化した。
+async def async_joints2orientations(executor, p3d_CxNxJx3, mask_vis_NxJ, bones_Jx2):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, joints2orientations, p3d_CxNxJx3, mask_vis_NxJ, bones_Jx2
+    )
+
+async def async_joints2projections(executor, p2d_CxNxJx2, mask_vis_NxJ):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, joints2projections, p2d_CxNxJx2, mask_vis_NxJ
+    )
 
 
 def visible_from_all_cam(mask_CxNxJ):
@@ -140,6 +153,10 @@ def calib_linear(v_CxNx3, n_CxMx3):
 
     return R_w2c_list, t_w2c_list.reshape((-1, 3, 1)), X
 
+# calib_linear関数を非同期に実行
+async def async_calib_linear(executor, v_CxNx3, n_CxMx3):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, calib_linear, v_CxNx3, n_CxMx3)
 
 def calib_linear_ransac(v_CxNx3, n_CxMx3, K, n_iter, th_2d, th_3d, seed):
     C = v_CxNx3.shape[0]

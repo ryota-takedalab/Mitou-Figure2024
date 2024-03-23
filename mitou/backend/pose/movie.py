@@ -90,7 +90,8 @@ async def handle_upload(client_id: str, files: List[UploadFile] = File(...)):
         raise HTTPException(status_code=404, detail="WebSocket object not found in connection info")
 
     # 非同期にrun.mainを呼び出し、WebSocketとclient_idを渡す
-    save_path = await run.main(temp_folder_path, websocket, client_id)
+    processor = await run.calibrate_video(temp_folder_path, websocket, client_id)
+    save_path = await run.generate_video(processor)
     print("save_path finished")
 
     return FileResponse(save_path, media_type='video/mp4', filename=Path(save_path).name)

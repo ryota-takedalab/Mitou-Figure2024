@@ -34,7 +34,7 @@ const IndexPage = () => {
       const heartbeatInterval = setInterval(() => {
         console.log('Sending heartbeat ping');
         websocket.send('ping');
-      }, 15000); // 15秒ごと
+      }, 30000); // 30秒ごと
   
       // Cleanup function for the heartbeat interval
       return () => clearInterval(heartbeatInterval);

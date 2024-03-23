@@ -206,7 +206,8 @@ async def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, devi
 #     return kpts2d, scores2d, kpts3d, scores3d
 
 
-def inferencer_dwp(video_folder, yolo_model, pose_estimator):
+async def inferencer_dwp(video_folder, yolo_model, pose_estimator):
+    executor = ThreadPoolExecutor(max_workers=4)
     types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
     video_files = []
     for t in types:
@@ -216,7 +217,7 @@ def inferencer_dwp(video_folder, yolo_model, pose_estimator):
     kpts2d, scores2d = [], []
     for input_video in video_files:
         detector = YOLO(yolo_model)
-        kpt2d, score2d, img_size, _ = estimate2d(input_video, detector,
+        kpt2d, score2d, img_size, _ = await async_estimate2d(executor, input_video, detector,
                                               pose_estimator, wholebody=True)
         # only add 23 keypoints (17 keypoints + 6 foot keypoints)
         kpts2d.append(kpt2d[:, :23, :])
