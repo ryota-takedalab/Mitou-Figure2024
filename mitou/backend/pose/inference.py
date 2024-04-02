@@ -148,6 +148,7 @@ async def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, devi
     for t in types:
         video_files += glob.glob(video_folder + '/' + t)
     video_files = natsorted(video_files)
+
     print(video_files)
 
     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
@@ -171,39 +172,6 @@ async def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, devi
     print("finished 2D&3D")
 
     return kpts2d, scores2d, kpts3d, scores3d
-
-# def inferencer(video_folder, yolo_model, pose_estimator, pose_lifter, device):
-
-#     types = ('*.mp4', '*.mov', '*.avi', '*.MP4', '*.MOV', '*.AVI')
-#     video_files = []
-#     for t in types:
-#         video_files += glob.glob(video_folder + '/' + t)
-#     video_files = natsorted(video_files)
-
-#     print(video_files)
-
-#     kpts2d, scores2d, kpts3d, scores3d = [], [], [], []
-#     for input_video in video_files:
-#         detector = YOLO(yolo_model)
-#         kpt2d, score2d, img_size, bboxs_list = estimate2d(input_video, detector, pose_estimator)
-#         print(kpt2d.shape)
-#         print("estimated2d finished")
-
-#         # モデルサイズに応じてn_framesを変更
-#         kpt3d, score3d = estimate3d(pose_lifter, device, kpt2d, score2d, img_size, n_frames=27)
-#         print("estimated3d finished")
-
-#         kpts2d.append(kpt2d)
-#         scores2d.append(score2d)
-#         kpts3d.append(kpt3d)
-#         scores3d.append(score3d)
-
-#     kpts2d = np.array(kpts2d)
-#     scores2d = np.array(scores2d)
-#     kpts3d = np.array(kpts3d)
-#     scores3d = np.array(scores3d)
-
-#     return kpts2d, scores2d, kpts3d, scores3d
 
 
 async def inferencer_dwp(video_folder, yolo_model, pose_estimator):
