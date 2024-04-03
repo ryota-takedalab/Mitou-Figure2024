@@ -11,13 +11,23 @@ const IndexPage = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [client_id, setClientId] = useState('');
   const [dots, setDots] = useState('');
+  const [calibrationCompleted, setCalibrationCompleted] = useState(false);
+
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);// ファイル入力要素への参照
+  const generateFileInputRef = useRef<HTMLInputElement>(null); // Generate Video用のファイル入力への参照
+
 
   const handleButtonClick = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.click();// カスタムボタンクリックで実際のファイル入力をトリガー
+      fileInputRef.current.click();// ファイル入力をトリガー
+    }
+  };
+
+  const handleGenerateButtonClick = () => {
+    if (generateFileInputRef.current) {
+      generateFileInputRef.current.click(); // Generate Videoのファイル入力をトリガー
     }
   };
   
@@ -34,7 +44,7 @@ const IndexPage = () => {
       const heartbeatInterval = setInterval(() => {
         console.log('Sending heartbeat ping');
         websocket.send('ping');
-      }, 15000); // 15秒ごと
+      }, 30000); // 30秒ごと
   
       // Cleanup function for the heartbeat interval
       return () => clearInterval(heartbeatInterval);
@@ -72,36 +82,67 @@ const IndexPage = () => {
       clearInterval(dotsInterval);
     };
   }, []);
-  
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleCalibrateFiles = async (event) => {
     if (event.target.files && event.target.files.length > 0) {
-        const formData = new FormData();
-        const uploadedUrls = Array.from(event.target.files).map(file => {
-            formData.append('files', file);
-            return URL.createObjectURL(file); // アップロードされたファイルからURLを生成
+      const formData = new FormData();
+      const uploadedUrls = Array.from(event.target.files).map(file => {
+        formData.append('files', file);
+        return URL.createObjectURL(file); // アップロードされたファイルからURLを生成
+      });
+
+      setUploadedVideos(uploadedUrls); // アップロードされた動画のURLを状態に保存
+      setUploading(true);
+      setCalibrationCompleted(false); 
+
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000/calibrate/'}${client_id}`, {
+          method: 'POST',
+          body: formData,
         });
-
-        setUploading(true);
-        setUploadedVideos(uploadedUrls); // アップロードされた動画のURLを状態に保存
-
-        try {
-          const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL || 'http://localhost:8000/upload/'}${client_id}`, {
-            method: 'POST',
-            body: formData,
-          });
-          if (!response.ok) {
-              throw new Error('Network response was not ok');
-          }
-          const blob = await response.blob();
-          const videoUrl = URL.createObjectURL(blob);
-          setVideoSrc(videoUrl); // 処理後の動画URLをセット
-        } catch (error) {
-          console.error('Error uploading the files:', error);
-        } finally {
-          setUploading(false);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        setCalibrationCompleted(true);
+      } catch (error) {
+        console.error('Error uploading the files:', error);
+      } finally {
+        setUploading(false);
+      }
     }
-};
+  };
+
+  const handleGenerateFiles = async (event) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const formData = new FormData();
+      const uploadedUrls = Array.from(event.target.files).map(file => {
+        formData.append('files', file); // 複数のファイルを追加
+        return URL.createObjectURL(file); // アップロードされたファイルからURLを生成
+      });
+  
+      setUploading(true);
+      setUploadedVideos(uploadedUrls);
+      setVideoSrc('');
+  
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000/generate_video/'}${client_id}`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const blob = await response.blob();
+        const videoUrl = URL.createObjectURL(blob);
+        setVideoSrc(videoUrl); // 処理後の動画URLをセット
+      } catch (error) {
+        console.error('Error during video generation:', error);
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+  
 
 
 return (
@@ -125,40 +166,32 @@ return (
       Upload Videos for Pose Estimation
     </h1>
 
-    {!videoSrc && (
-    <button 
-      onClick={handleButtonClick} 
-      disabled={uploading} 
-      className="customButton"
-      style={{
-        fontSize: '28px', // フォントサイズ
-        padding: '10px 20px', // 内側の余白
-        backgroundColor: '#007bff', // 背景色
-        width: "20%",
-        height: "70px",
-        color: 'white', // 文字色
-        border: 'none', // 境界線を消す
-        borderRadius: '5px', // ボーダーの角を丸くする
-        cursor: uploading ? 'not-allowed' : 'pointer', // カーソルを指定
-        marginTop:"50px",
-        margin: '10px', // 外側の余白
-        // 位置を中央に設定する例
-        display: 'block', // ブロックレベル要素として扱う
-        marginLeft: 'auto', // 自動的に左のマージンを調整
-        marginRight: 'auto', // 自動的に右のマージンを調整
-      }}
-      >
-      {uploading ? 'Uploading...' : 'Select Videos'} {/* アップロード中はボタンのテキストを変更 */}
-    </button>
-    )}
+    <div className="button-container">
+      <input
+        type="file"
+        multiple
+        ref={fileInputRef}
+        onChange={handleCalibrateFiles}
+        style={{ display: 'none' }}
+      />
+      <button className="customButton" onClick={() => fileInputRef.current.click()} disabled={uploading}>
+        Select Videos for Calibration
+      </button>
 
-    <input
-      type="file"
-      multiple
-      ref={fileInputRef}
-      onChange={handleFileChange}
-      style={{ display: 'none' }} // 元のファイル入力は非表示
-    />
+      <input
+        type="file"
+        multiple
+        ref={generateFileInputRef}
+        onChange={handleGenerateFiles}
+        style={{ display: 'none' }}
+        accept="video/*"
+      />
+      <button className="customButton" onClick={handleGenerateButtonClick} disabled={uploading || uploadedVideos.length === 0}>
+        Generate Video
+      </button>
+    </div>
+
+
     {uploading && (
       <div>
         {progressMessage && (
@@ -184,13 +217,18 @@ return (
         )}
       </div>
     )}
+    {calibrationCompleted && (
+      <div style={{ marginTop: '50px', textAlign: 'center', color: 'white'}}>
+        <p>Calibration completed</p>
+      </div>
+    )}
     {videoSrc && ( //現在はDetailsもvideoSrcをトリガーにしている
       <div style={{ marginTop: '40px', marginBottom: '50px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '20px', maxWidth: '1200px', width: '100%' }}> {/* コンテナの最大幅を制限 */}
           {/* 動画コンテナ */}
             <div style={{ textAlign: 'center', flex: 2 }}> {/* 動画コンテナにより多くのスペースを割り当て */}
               <p style={{ fontSize: '50px',color: 'white'}}>Result Video</p>
-              <video controls src={videoSrc} style={{ maxWidth: "720px", width: '100%', height: "auto" }} autoPlay loop>
+              <video controls src={videoSrc} style={{ maxWidth: "720px", width: '100%', height: "auto"}} autoPlay loop>
                 Your browser does not support the video tag.
               </video>
             </div>
